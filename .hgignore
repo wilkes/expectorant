@@ -1,0 +1,9 @@
+syntax: glob
+tmp/*
+.DS_Store
+*.pyc
+*~
+*.sqlite
+run
+settings.py
+*.egg-info
