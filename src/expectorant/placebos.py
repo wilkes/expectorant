@@ -18,7 +18,6 @@ class Dispenser(object):
         for m in self.placebos.itervalues():
             m.verify()
 
-# Stolen from http://www.voidspace.org.uk/python/mock.html, Sentinel pattern
 class Placebo(object):
     def __init__(self, name='Mock'):
         self.name = name
