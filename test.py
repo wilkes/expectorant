@@ -1,31 +1,45 @@
-from expectorant import Mock, Expectation, sentinel, VerificationFailure
+from expectorant import mock, Expectation, VerificationFailure
 import unittest
 
-class SentinelTest(unittest.TestCase):
-    def test_bookkeeping(self):
-        expected = sentinel.Expected
-        assert expected is sentinel.Expected
-
-class MockTest(unittest.TestCase):
+class ExpectorantTest(unittest.TestCase):
     def setUp(self):
-        self.mock = Mock('Mocked')
+        mock.reset()
+        self.before_each()
     
+    def before_each(self): pass
+
+class MockFactoryTest(unittest.TestCase):
+    def test_verify_all(self):
+        mock.FailingMock.receives('doit').called(1)
+        try:
+            mock.verify()
+            self.fail()
+        except VerificationFailure, e:
+            assert str(e) == "<Expectation 'FailingMock.doit'> expected to be called 1 times, but was called 0 times", str(e)
+
+class MockTest(ExpectorantTest):    
+    def before_each(self):
+        self.mock = mock.Mocked
+
     def test_name(self):
         assert self.mock.name == 'Mocked'
+
+    def test_identity(self):
+        assert mock.Mocked is self.mock
     
     def test_verify(self):
-        exps = [Mock().receives('verify').called(1).mock for i in range(10)]
+        exps = [getattr(mock, 'mock' + str(i)).receives('verify').called(1).mock for i in range(10)]
         self.mock.expecations = exps
         self.mock.verify()
         for exp in exps:
             exp.verify()
 
-class ExpectationTest(unittest.TestCase):
-    def setUp(self):
-        self.exp = Expectation(sentinel.ParentMock, 'test')
+class ExpectationTest(ExpectorantTest):
+    def before_each(self):
+        self.exp = Expectation(mock.ParentMock, 'test')
     
     def test_parent_mock_sugar(self):
-        assert self.exp.mock == sentinel.ParentMock
+        assert self.exp.mock == mock.ParentMock
 
     def test_called_fails(self):
         self.exp.called(2)
@@ -33,7 +47,7 @@ class ExpectationTest(unittest.TestCase):
             self.exp.verify()
             self.fail()
         except VerificationFailure, e:
-            assert str(e) == "Expected 'test' to be called 2 times, but was called 0 times", str(e)
+            assert str(e) == "<Expectation 'ParentMock.test'> expected to be called 2 times, but was called 0 times", str(e)
 
     def test_called_passes(self):
         self.exp.called(2)
@@ -57,16 +71,16 @@ class ExpectationTest(unittest.TestCase):
         self.exp(1, 2, 3, four=4, five=5)
     
     def test_expecting_args_values_passes(self):
-        self.exp.with_args(sentinel.One, sentinel.Two)
-        self.exp(sentinel.One, sentinel.Two)
+        self.exp.with_args(mock.One, mock.Two)
+        self.exp(mock.One, mock.Two)
 
     def test_expecting_args_values_fails(self):
-        self.exp.with_args(sentinel.One, sentinel.Two)
+        self.exp.with_args(mock.One, mock.Two)
         try:
-            self.exp(sentinel.One, 2)
+            self.exp(mock.One, 2)
             self.fail()
         except VerificationFailure, e:
-            expected = 'position 1: expected: <SentinelObject "Two"> received: 2'
+            expected = "<Expectation 'ParentMock.test'> at position 1: expected: <Mock 'Two'> received: 2"
             assert str(e) == expected, str(e)
         
     def test_expecting_kwargs_values_passes(self):
@@ -79,6 +93,6 @@ class ExpectationTest(unittest.TestCase):
             self.exp(one=1, two=3)
             self.fail()
         except VerificationFailure, e:
-            assert str(e) == 'keyword two: expected: 2 received: 3', str(e)
+            assert str(e) == "<Expectation 'ParentMock.test'> keyword two: expected: 2 received: 3", str(e)
         
         

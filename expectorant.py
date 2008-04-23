@@ -1,20 +1,4 @@
-# Stolen from http://www.voidspace.org.uk/python/mock.html
-class SentinelObject(object):
-    def __init__(self, name):
-        self.name = name
-    def __repr__(self):
-        return '<SentinelObject "%s">' % self.name
-
-class Sentinel(object):
-    def __init__(self):
-        self._sentinels = {}
-        
-    def __getattr__(self, name):
-        return self._sentinels.setdefault(name, SentinelObject(name))
-
-sentinel = Sentinel()
-
-
+# Stolen from http://www.voidspace.org.uk/python/mock.html, Sentinel pattern
 class Mock(object):
     def __init__(self, name='Mock'):
         self.name = name
@@ -31,13 +15,31 @@ class Mock(object):
             each.verify()
             
     def __repr__(self):
-        return "<Mock %s>" % self.name
+        return "<Mock '%s'>" % self.name
+
+class Mockery(object):
+    def __init__(self):
+        self.reset()
+    
+    def __call__(self, name=None):
+        return Mock(name)
+
+    def __getattr__(self, name):
+        return self.mocks.setdefault(name, Mock(name))
+    
+    def verify(self):
+        for m in self.mocks.itervalues():
+            m.verify()
+
+    def reset(self):
+        self.mocks = {}
+mock = Mockery()
 
 class Expectation(object):
     def __init__(self, mock, name):
         self.mock = mock
         self.method_name = name
-        self.called_times = 0
+        self.times_called = 0
         self.return_value = None
         self.args = []
         self.kwargs = None
@@ -45,7 +47,7 @@ class Expectation(object):
     
     def __call__(self, *args, **kwargs):
         self.__verify_args(*args, **kwargs)
-        self.called_times += 1
+        self.times_called += 1
         return self.return_value
     
     def with_args(self, *args, **kwargs):
@@ -54,7 +56,7 @@ class Expectation(object):
         self.kwargs = kwargs
     
     def called(self, num):
-        self.expected_number_of_calls = num
+        self.expected_times_called = num
         return self
     
     def returns(self, ret):
@@ -62,32 +64,34 @@ class Expectation(object):
         return self
         
     def verify(self):
-        confirm(self.called_times == self.expected_number_of_calls, 
-                "Expected '%s' to be called %s times, but was called %s times" % (self.method_name, self.expected_number_of_calls, self.called_times))
+        confirm(self.times_called == self.expected_times_called, 
+                "%s expected to be called %s times, but was called %s times" % 
+                    (repr(self), self.expected_times_called, self.times_called))
     
     def __verify_args(self, *args, **kwargs):
         if not self.expects_args: return
         confirm(len(self.args) == len(args), 
-            "Expected %s positional arguments, but received %s\n\t%s" % (len(self.args), len(args), repr(args)))
-        i = 0
-        for expected, received in zip(self.args, args):
+            "%s expected %s positional arguments, but received %s\n\t%s" % 
+                (repr(self), len(self.args), len(args), repr(args)))
+        for (i, (expected, received)) in enumerate(zip(self.args, args)):
             confirm(expected is received, 
-                        "position %d: expected: %s received: %s" % (i, repr(expected), repr(received)))
-            i += 1
+                        "%s at position %d: expected: %s received: %s" % 
+                            (repr(self), i, repr(expected), repr(received)))
             
         confirm(len(self.kwargs) == len(kwargs), 
-            "Expected %s positional arguments, but received %s" % (len(self.kwargs), len(kwargs)))
+            "%s expected %s positional arguments, but received %s" % 
+                (repr(self), len(self.kwargs), len(kwargs)))
         for k in self.kwargs:
-            confirm(k in kwargs, "missing keyword %s" % k)
-            expected = self.kwargs[k]
-            received = kwargs[k]
-            confirm(expected is received, 
-                        "keyword %s: expected: %s received: %s" % (k, repr(expected), repr(received)))
+            confirm(k in kwargs, "%s missing keyword %s" % (repr(self), k))
+            confirm(self.kwargs[k] is kwargs[k], 
+                        "%s keyword %s: expected: %s received: %s" % 
+                            (repr(self), k, repr(self.kwargs[k]), repr(kwargs[k])))
+
+    def __repr__(self):
+        return "<%s '%s.%s'>" % (self.__class__.__name__, self.mock.name, self.method_name)
             
 
 def confirm(bool, msg):
-    if bool: return
-    raise VerificationFailure, msg
+    if not bool: raise VerificationFailure, msg
 
-class VerificationFailure(Exception):
-    pass
+class VerificationFailure(Exception): pass
