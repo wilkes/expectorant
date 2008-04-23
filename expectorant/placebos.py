@@ -5,22 +5,22 @@ class Dispenser(object):
         self.reset()
     
     def reset(self):
-        self.mocks = {}
+        self.placebos = {}
     
     def __call__(self, name=None):
         return Placebo(name)
     
     def __getattr__(self, name):
-        return self.mocks.setdefault(name, Placebo(name))
+        return self.placebos.setdefault(name, Placebo(name))
     
     def __enter__(self):
         return self
     
-    def __exit__( self, type, value, tb ):
+    def __exit__( self, type, value, tb):
         self.verify()
     
     def verify(self):
-        for m in self.mocks.itervalues():
+        for m in self.placebos.itervalues():
             m.verify()
 dispenser = Dispenser()
 

@@ -1,6 +1,6 @@
 from __future__ import with_statement
 from expectorant.placebos import dispenser, Dispenser, Expectation
-from expectorant.diagnosis import VerificationFailure, surely, raises, same_as, equals
+from expectorant.diagnosis import surely, raises, same_as, equals
 
 class PlaceboExpectation(object):
     def __init__(self):
@@ -15,7 +15,7 @@ class TestDispenser(object):
 
     def test_verify_all(self):
         dispenser.FailPlacebo.receives('doit').once()
-        surely(lambda: dispenser.verify(), raises, VerificationFailure,
+        surely(lambda: dispenser.verify(), raises, AssertionError,
             "<Expectation 'FailPlacebo.doit'> expected to be called 1 times, but was called 0 times")
 
     def test_with_statement(self):
@@ -75,7 +75,7 @@ class TestExpectation(object):
 
     def test_called_fails(self):
         self.exp.twice()
-        surely(lambda: self.exp.verify(), raises, VerificationFailure,
+        surely(lambda: self.exp.verify(), raises, AssertionError,
             "<Expectation 'Parent.test'> expected to be called 1 times, but was called 0 times")
 
     def test_twice_passes(self):
@@ -86,7 +86,7 @@ class TestExpectation(object):
 
     def test_called_fails(self):
         self.exp.twice()
-        surely(lambda: self.exp.verify(), raises, VerificationFailure,
+        surely(lambda: self.exp.verify(), raises, AssertionError,
             "<Expectation 'Parent.test'> expected to be called 2 times, but was called 0 times")
 
     def test_called_passes(self):
@@ -98,7 +98,7 @@ class TestExpectation(object):
 
     def test_called_fails(self):
         self.exp.called(3)
-        surely(lambda: self.exp.verify(), raises, VerificationFailure,
+        surely(lambda: self.exp.verify(), raises, AssertionError,
             "<Expectation 'Parent.test'> expected to be called 3 times, but was called 0 times")
 
     def test_returns(self):
@@ -107,7 +107,7 @@ class TestExpectation(object):
 
     def test_expecting_args_length_fails(self):
         self.exp.with_args(1, 2 , 3, four=4, five=5)
-        surely(self.exp, raises, VerificationFailure)
+        surely(self.exp, raises, AssertionError)
 
     def test_expecting_args_length_passes(self):
         self.exp.with_args(1, 2 , 3, four=4, five=5)
@@ -119,7 +119,7 @@ class TestExpectation(object):
 
     def test_expecting_args_values_fails(self):
         self.exp.with_args(dispenser.One, dispenser.Two)
-        surely(lambda: self.exp(dispenser.One, 2), raises, VerificationFailure,
+        surely(lambda: self.exp(dispenser.One, 2), raises, AssertionError,
                 "<Expectation 'Parent.test'> at position 1: expected: <Mock 'Two'> received: 2")
 
     def test_expecting_kwargs_values_passes(self):
@@ -128,7 +128,7 @@ class TestExpectation(object):
 
     def test_expecting_kwargs_values_fails(self):
         self.exp.with_args(one=1, two=2)
-        surely(lambda: self.exp(one=1, two=3), raises, VerificationFailure,
+        surely(lambda: self.exp(one=1, two=3), raises, AssertionError,
                 "<Expectation 'Parent.test'> keyword two: expected: 2 received: 3")
 
     def test_chaining_with_with_args(self):
