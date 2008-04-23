@@ -1,10 +1,5 @@
-from expectorant.diagnosis import confirm
-
 class Dispenser(object):
     def __init__(self):
-        self.reset()
-    
-    def reset(self):
         self.placebos = {}
     
     def __call__(self, name=None):
@@ -22,7 +17,6 @@ class Dispenser(object):
     def verify(self):
         for m in self.placebos.itervalues():
             m.verify()
-dispenser = Dispenser()
 
 # Stolen from http://www.voidspace.org.uk/python/mock.html, Sentinel pattern
 class Placebo(object):
@@ -52,10 +46,6 @@ class Expectation(object):
         self.method_name = name
         self.times_called = 0
         self.return_value = None
-        self.args = []
-        self.kwargs = None
-        self.expects_args = False
-        self.expected_times_called = 0
     
     def __call__(self, *args, **kwargs):
         self.__verify_args(*args, **kwargs)
@@ -63,8 +53,7 @@ class Expectation(object):
         return self.return_value
     
     def with_args(self, *args, **kwargs):
-        self.expects_args = True
-        self.args.extend(args)
+        self.args = args
         self.kwargs = kwargs
         return self
     
@@ -83,34 +72,34 @@ class Expectation(object):
         return self
     
     def verify(self):
-        if self.expected_times_called:
-            confirm(self.times_called == self.expected_times_called,
-                    "%s expected to be called %s times, but was called %s times" %
-                        (repr(self), self.expected_times_called, self.times_called))
+        if hasattr(self, 'expected_times_called') and self.expected_times_called > 0:
+            assert self.times_called == self.expected_times_called, \
+                    "%s expected to be called %s times, but was called %s times" % \
+                        (repr(self), self.expected_times_called, self.times_called)
     
     def __verify_args(self, *args, **kwargs):
-        if self.expects_args:
+        if hasattr(self, 'args'):
             self.__verify_positional_args(args)
             self.__verify_keywords_args(kwargs)
     
     def __verify_positional_args(self, args):
-        confirm(len(self.args) == len(args),
-            "%s expected %s positional arguments, but received %s\n\t%s" %
-                (repr(self), len(self.args), len(args), repr(args)))
+        assert len(self.args) == len(args), \
+            "%s expected %s positional arguments, but received %s\n\t%s" % \
+                (repr(self), len(self.args), len(args), repr(args))
         for (i, (expected, received)) in enumerate(zip(self.args, args)):
-            confirm(expected is received,
-                        "%s at position %d: expected: %s received: %s" %
-                            (repr(self), i, repr(expected), repr(received)))
+            assert expected is received, \
+                        "%s at position %d: expected: %s received: %s" % \
+                            (repr(self), i, repr(expected), repr(received))
     
     def __verify_keywords_args(self, kwargs):
-        confirm(len(self.kwargs) == len(kwargs),
-            "%s expected %s positional arguments, but received %s" %
-                (repr(self), len(self.kwargs), len(kwargs)))
+        assert len(self.kwargs) == len(kwargs), \
+            "%s expected %s positional arguments, but received %s" % \
+                (repr(self), len(self.kwargs), len(kwargs))
         for k in self.kwargs:
-            confirm(k in kwargs, "%s missing keyword %s" % (repr(self), k))
-            confirm(self.kwargs[k] is kwargs[k],
-                        "%s keyword %s: expected: %s received: %s" %
-                            (repr(self), k, repr(self.kwargs[k]), repr(kwargs[k])))
+            assert k in kwargs, "%s missing keyword %s" % (repr(self), k)
+            assert self.kwargs[k] is kwargs[k], \
+                        "%s keyword %s: expected: %s received: %s" % \
+                            (repr(self), k, repr(self.kwargs[k]), repr(kwargs[k]))
     
     def __repr__(self):
         return "<%s '%s.%s'>" % (self.__class__.__name__, self.mock.name, self.method_name)

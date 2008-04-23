@@ -1,10 +1,4 @@
-import re
-def camelcase_to_underscore(str):
-    return re.sub('(((?<=[a-z])[A-Z])|([A-Z](?![A-Z]|$)))', '_\\1', str).lower().strip('_')
-
-def humanize(str):
-    return camelcase_to_underscore(str).replace('_', ' ')
-
+import sys
 SETUP_METHODS = ('set_up', 'setUp', 'setup')
 TEAR_DOWN_METHODS = ('tear_down', 'tearDown', 'teardown')
 
@@ -14,22 +8,27 @@ class TextClinic:
         for trial_method in self.__trials_for(a_class):
             try:
                 self.run_trial(a_class(), trial_method)
-                self.results.append((trial_method, 'pass'))
-            except AssertionError:
-                self.results.append((trial_method, 'failure'))
+            except AssertionError, e:
+                self.results.append((trial_method, 'failure', sys.exc_info()))
             except:
-                self.results.append((trial_method, 'error'))
+                self.results.append((trial_method, 'error', sys.exc_info()))
+            else:
+                self.results.append((trial_method, 'pass', sys.exc_info()))
     
+    def get_ran(self):
+        return [p[0] for p in self.results]
+    ran = property(get_ran)
+        
     def get_passes(self):
-        return [p for p in self.results if p[1] == 'pass']
+        return [p[0] for p in self.results if p[1] == 'pass']
     passes = property(get_passes)
 
     def get_errors(self):
-        return [p for p in self.results if p[1] == 'error']
+        return [p[0] for p in self.results if p[1] == 'error']
     errors = property(get_errors)
     
     def get_failures(self):
-        return [p for p in self.results if p[1] == 'failure']
+        return [p[0] for p in self.results if p[1] == 'failure']
     failures = property(get_failures)
     
     def run_trial(self, trial, method_name):

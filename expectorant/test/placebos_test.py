@@ -1,5 +1,5 @@
 from __future__ import with_statement
-from expectorant.placebos import dispenser, Dispenser, Expectation
+from expectorant.placebos import Dispenser, Expectation
 from expectorant.diagnosis import surely, raises, same_as, equals
 
 class PlaceboExpectation(object):
@@ -9,9 +9,11 @@ class PlaceboExpectation(object):
     def verify(self):
         self.count += 1
 
+
 class TestDispenser(object):
     def setUp(self):
-        dispenser.reset()
+        global dispenser
+        dispenser = Dispenser()
 
     def test_verify_all(self):
         dispenser.FailPlacebo.receives('doit').once()
@@ -45,7 +47,8 @@ class TestDispenser(object):
 
 class TestPlacebo(object):
     def setUp(self):
-        dispenser.reset()
+        global dispenser
+        dispenser = Dispenser()
         self.placebo = dispenser.Placebo
     
     def test_name(self):
