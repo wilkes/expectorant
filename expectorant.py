@@ -129,4 +129,14 @@ same_as.surely_not_message = lambda a,b: "%s is the same as %s" % (repr(a), repr
 is_same_as = same_as
 is_the_same_as = same_as
 
+def raises(func, exception_class, message=None):
+    try:
+        func()
+        return False
+    except exception_class, e:
+        if message: return str(e) == message
+        return True
+raises.surely_message = lambda *args: "%s was not raised" % args[2]
+raises.surely_not_message = lambda *args: "%s was raised" % args[2]
+
 class VerificationFailure(Exception): pass

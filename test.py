@@ -1,5 +1,5 @@
 from __future__ import with_statement
-from expectorant import mock, Mockery, Expectation, VerificationFailure, surely, surely_not, same_as, is_same_as, is_the_same_as
+from expectorant import mock, Mockery, Expectation, VerificationFailure, surely, surely_not, raises, same_as, is_same_as, is_the_same_as
 import unittest
 import operator
 
@@ -21,11 +21,8 @@ class ExpectorantTest(unittest.TestCase):
 class MockeryTest(ExpectorantTest):
     def test_verify_all(self):
         mock.FailingMock.receives('doit').called(1)
-        try:
-            mock.verify()
-            self.fail()
-        except VerificationFailure, e:
-            assert str(e) == "<Expectation 'FailingMock.doit'> expected to be called 1 times, but was called 0 times", str(e)
+        surely(lambda: mock.verify(), VerificationFailure,
+            "<Expectation 'FailingMock.doit'> expected to be called 1 times, but was called 0 times")
 
     def test_with_statement(self):
         exps = [MockedExpection() for i in range(10)]
@@ -74,11 +71,8 @@ class ExpectationTest(ExpectorantTest):
 
     def test_called_fails(self):
         self.exp.called(2)
-        try:
-            self.exp.verify()
-            self.fail()
-        except VerificationFailure, e:
-            assert str(e) == "<Expectation 'ParentMock.test'> expected to be called 2 times, but was called 0 times", str(e)
+        surely(lambda: self.exp.verify(), raises, VerificationFailure, 
+            "<Expectation 'ParentMock.test'> expected to be called 2 times, but was called 0 times")
 
     def test_called_passes(self):
         self.exp.called(2)
@@ -92,11 +86,8 @@ class ExpectationTest(ExpectorantTest):
     
     def test_expecting_args_length_fails(self):
         self.exp.with_args(1, 2 , 3, four=4, five=5)
-        try:
-            self.exp()
-            self.fail()
-        except VerificationFailure: pass
-
+        surely(self.exp, raises, VerificationFailure)
+    
     def test_expecting_args_length_passes(self):
         self.exp.with_args(1, 2 , 3, four=4, five=5)                
         self.exp(1, 2, 3, four=4, five=5)
@@ -107,12 +98,8 @@ class ExpectationTest(ExpectorantTest):
 
     def test_expecting_args_values_fails(self):
         self.exp.with_args(mock.One, mock.Two)
-        try:
-            self.exp(mock.One, 2)
-            self.fail()
-        except VerificationFailure, e:
-            expected = "<Expectation 'ParentMock.test'> at position 1: expected: <Mock 'Two'> received: 2"
-            assert str(e) == expected, str(e)
+        surely(lambda: self.exp(mock.One, 2), raises, VerificationFailure,
+                "<Expectation 'ParentMock.test'> at position 1: expected: <Mock 'Two'> received: 2")
         
     def test_expecting_kwargs_values_passes(self):
         self.exp.with_args(one=1, two=2)
@@ -120,12 +107,9 @@ class ExpectationTest(ExpectorantTest):
 
     def test_expecting_kwargs_values_fails(self):
         self.exp.with_args(one=1, two=2)
-        try:
-            self.exp(one=1, two=3)
-            self.fail()
-        except VerificationFailure, e:
-            assert str(e) == "<Expectation 'ParentMock.test'> keyword two: expected: 2 received: 3", str(e)
-        
+        surely(lambda: self.exp(one=1, two=3), raises, VerificationFailure,
+                "<Expectation 'ParentMock.test'> keyword two: expected: 2 received: 3")
+
     def test_chaining_with_with_args(self):
         assert self.exp == self.exp.with_args([])
 
@@ -145,16 +129,10 @@ class SurelyTest(unittest.TestCase):
         surely_not(2, same_as, 1)
         
     def test_same_as_message(self):
-        try:
-            surely(1, same_as, 2)
-        except VerificationFailure, e:
-            assert str(e) == '1 is not the same as 2', str(e)
+        surely(lambda: surely(1, same_as, 2), raises,  VerificationFailure, '1 is not the same as 2')
 
     def test_same_as_not_message(self):
-        try:
-            surely_not(1, same_as, 1)
-        except VerificationFailure, e:
-            assert str(e) == '1 is the same as 1', str(e)
+        surely(lambda: surely_not(1, same_as, 1), raises, VerificationFailure, '1 is the same as 1')
 
     def test_unary(self):
         is_the_truth = lambda x: x is True
@@ -162,13 +140,6 @@ class SurelyTest(unittest.TestCase):
         is_the_truth.surely_not_message = lambda x: "%s is True" % x
 
         surely(True, is_the_truth)
-        try:
-            surely(False, is_the_truth)
-        except VerificationFailure, e:
-            assert str(e) == "False is not True", str(e)
-            
+        surely(lambda: surely(False, is_the_truth), raises, VerificationFailure, "False is not True")            
         surely_not(False, is_the_truth)
-        try:
-            surely_not(True, is_the_truth)
-        except VerificationFailure, e:
-            assert str(e) == "True is True", str(e)
+        surely(lambda: surely_not(True, is_the_truth), raises, VerificationFailure, "True is True")
