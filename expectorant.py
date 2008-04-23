@@ -134,7 +134,9 @@ def raises(func, exception_class, message=None):
         func()
         return False
     except exception_class, e:
-        if message: return str(e) == message
+        if message: 
+            if not str(e) == message:
+                raise VerificationFailure, "<%s> does not equal <%s>" % (str(e), message)
         return True
 raises.surely_message = lambda *args: "%s was not raised" % args[2]
 raises.surely_not_message = lambda *args: "%s was raised" % args[2]
