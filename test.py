@@ -1,7 +1,7 @@
 from __future__ import with_statement
 from expectorant import mock, Mockery, Expectation, VerificationFailure, surely, surely_not, raises, same_as, is_same_as, is_the_same_as
 import unittest
-import operator
+from operator import eq
 
 class MockedExpection:
     def __init__(self):
@@ -28,21 +28,21 @@ class MockeryTest(ExpectorantTest):
         exps = [MockedExpection() for i in range(10)]
         mock.Mocked.expectations = exps
         with mock: 
-            for exp in exps: assert exp.count == 0, str(exp.count)
-        for exp in exps: assert exp.count == 1, str(exp.count)
+            for exp in exps: surely(exp.count, eq, 0)
+        for exp in exps: surely(exp.count, eq, 1)
 
     def test_with_statement_style2(self):
         exps = [MockedExpection() for i in range(10)]
         with Mockery() as m: 
             m.Mocked.expectations = exps
-            for exp in exps: assert exp.count == 0, str(exp.count)
-        for exp in exps: assert exp.count == 1, str(exp.count)
+            for exp in exps: surely(exp.count, eq, 0)
+        for exp in exps: surely(exp.count, eq, 1)
 
     def test_manual(self):
         exps = [MockedExpection() for i in range(10)]
         mock.Mocked.expectations = exps
         mock.verify()
-        for exp in exps: assert exp.count == 1, str(exp.count)
+        for exp in exps: surely(exp.count, eq, 1)
 
         
 class MockTest(ExpectorantTest):    
@@ -59,15 +59,15 @@ class MockTest(ExpectorantTest):
         exps = [MockedExpection() for i in range(10)]
         mock.Mocked.expectations = exps
         mock.Mocked.verify()
-        for exp in exps: assert exp.count == 1, str(exp.count)
-        
+        for exp in exps: surely(exp.count, eq, 1)
+
         
 class ExpectationTest(ExpectorantTest):
     def before_each(self):
         self.exp = Expectation(mock.ParentMock, 'test')
     
     def test_parent_mock_sugar(self):
-        assert self.exp.mock == mock.ParentMock
+        surely(self.exp.mock, same_as, mock.ParentMock)
 
     def test_called_fails(self):
         self.exp.called(2)
@@ -82,7 +82,7 @@ class ExpectationTest(ExpectorantTest):
     
     def test_returns(self):
         self.exp.returns(1)
-        assert 1 == self.exp()
+        surely(self.exp(), eq, 1)
     
     def test_expecting_args_length_fails(self):
         self.exp.with_args(1, 2 , 3, four=4, five=5)
