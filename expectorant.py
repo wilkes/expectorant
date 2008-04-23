@@ -21,7 +21,7 @@ class Mock(object):
         self.expectations = []
 
     def receives(self, method_name):
-        exp = Expectation(method_name)
+        exp = Expectation(self, method_name)
         self.__dict__[method_name] = exp
         self.expectations.append(exp)
         return exp
@@ -29,11 +29,13 @@ class Mock(object):
     def verify(self):
         for each in self.expectations:
             each.verify()
+            
     def __repr__(self):
         return "<Mock %s>" % self.name
 
 class Expectation(object):
-    def __init__(self, name):
+    def __init__(self, mock, name):
+        self.mock = mock
         self.method_name = name
         self.called_times = 0
         self.return_value = None
@@ -46,7 +48,7 @@ class Expectation(object):
         self.called_times += 1
         return self.return_value
     
-    def expecting(self, *args, **kwargs):
+    def with_args(self, *args, **kwargs):
         self.expects_args = True
         self.args.extend(args)
         self.kwargs = kwargs
