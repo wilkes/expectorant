@@ -1,4 +1,3 @@
-from phlegm import VerificationFailure
 from expectorant.diagnosis import confirm
 
 class Dispenser(object):

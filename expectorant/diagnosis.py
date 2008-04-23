@@ -1,5 +1,4 @@
-from phlegm import VerificationFailure
-import operator
+class VerificationFailure(Exception): pass
 
 def confirm(bool, msg):
     if not bool: raise VerificationFailure, msg

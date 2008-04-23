@@ -1,1 +1,0 @@
-class VerificationFailure(Exception): pass

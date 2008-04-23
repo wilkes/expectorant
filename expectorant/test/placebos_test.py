@@ -1,18 +1,15 @@
 from __future__ import with_statement
-from expectorant.phlegm import VerificationFailure
 from expectorant.placebos import dispenser, Dispenser, Expectation
-from expectorant.diagnosis import surely, surely_not, raises, same_as
-import unittest
-from operator import eq
+from expectorant.diagnosis import VerificationFailure, surely, raises, same_as, equals
 
-class PlaceboExpectation:
+class PlaceboExpectation(object):
     def __init__(self):
         self.count = 0
     
     def verify(self):
         self.count += 1
 
-class DispenserTest(unittest.TestCase):
+class TestDispenser(object):
     def setUp(self):
         dispenser.reset()
 
@@ -25,23 +22,28 @@ class DispenserTest(unittest.TestCase):
         exps = [PlaceboExpectation() for i in range(10)]
         dispenser.Mocked.expectations = exps
         with dispenser:
-            for exp in exps: surely(exp.count, eq, 0)
-        for exp in exps: surely(exp.count, eq, 1)
+            for exp in exps: 
+                surely(exp.count, equals, 0)
+        for exp in exps: 
+            surely(exp.count, equals, 1)
 
     def test_with_statement_style2(self):
         exps = [PlaceboExpectation() for i in range(10)]
         with Dispenser() as m:
             m.Mocked.expectations = exps
-            for exp in exps: surely(exp.count, eq, 0)
-        for exp in exps: surely(exp.count, eq, 1)
+            for exp in exps: 
+                surely(exp.count, equals, 0)
+        for exp in exps: 
+            surely(exp.count, equals, 1)
 
     def test_manual(self):
         exps = [PlaceboExpectation() for i in range(10)]
         dispenser.Mocked.expectations = exps
         dispenser.verify()
-        for exp in exps: surely(exp.count, eq, 1)
+        for exp in exps: 
+            surely(exp.count, equals, 1)
 
-class PlaceboTest(unittest.TestCase):
+class TestPlacebo(object):
     def setUp(self):
         dispenser.reset()
         self.placebo = dispenser.Placebo
@@ -56,9 +58,10 @@ class PlaceboTest(unittest.TestCase):
         exps = [PlaceboExpectation() for i in range(10)]
         dispenser.Placebo.expectations = exps
         dispenser.Placebo.verify()
-        for exp in exps: surely(exp.count, eq, 1)
+        for exp in exps: 
+            surely(exp.count, equals, 1)
 
-class ExpectationTest(unittest.TestCase):
+class TestExpectation(object):
     def setUp(self):
         self.exp = Expectation(dispenser.Parent, 'test')
 
@@ -100,7 +103,7 @@ class ExpectationTest(unittest.TestCase):
 
     def test_returns(self):
         self.exp.returns(1)
-        surely(self.exp(), eq, 1)
+        surely(self.exp(), equals, 1)
 
     def test_expecting_args_length_fails(self):
         self.exp.with_args(1, 2 , 3, four=4, five=5)

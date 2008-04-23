@@ -1,9 +1,7 @@
 from __future__ import with_statement
-from expectorant.phlegm import VerificationFailure
-from expectorant.diagnosis import surely, surely_not, raises, same_as, is_same_as, is_the_same_as
-import unittest
+from expectorant.diagnosis import VerificationFailure, surely, surely_not, raises, same_as, is_same_as, is_the_same_as
 
-class SurelyTest(unittest.TestCase):
+class TestDiagnosis(object):
     def test_surely_operator_is(self):
         surely(1, same_as, 1)
         surely(1, is_same_as, 1)
