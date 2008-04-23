@@ -70,6 +70,12 @@ class Expectation(object):
         self.expected_times_called = num
         return self
     
+    def once(self):
+        return self.called(1)
+    
+    def twice(self):
+        return self.called(2)
+
     def returns(self, ret):
         self.return_value = ret
         return self

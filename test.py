@@ -20,7 +20,7 @@ class ExpectorantTest(unittest.TestCase):
 
 class MockeryTest(ExpectorantTest):
     def test_verify_all(self):
-        mock.FailingMock.receives('doit').called(1)
+        mock.FailingMock.receives('doit').once()
         surely(lambda: mock.verify(), VerificationFailure,
             "<Expectation 'FailingMock.doit'> expected to be called 1 times, but was called 0 times")
 
@@ -54,7 +54,7 @@ class MockTest(ExpectorantTest):
 
     def test_identity(self):
         assert mock.Mocked is self.mocked
-    
+
     def test_verify(self):
         exps = [MockedExpection() for i in range(10)]
         mock.Mocked.expectations = exps
@@ -69,16 +69,38 @@ class ExpectationTest(ExpectorantTest):
     def test_parent_mock_sugar(self):
         surely(self.exp.mock, same_as, mock.ParentMock)
 
-    def test_called_fails(self):
-        self.exp.called(2)
-        surely(lambda: self.exp.verify(), raises, VerificationFailure, 
-            "<Expectation 'ParentMock.test'> expected to be called 2 times, but was called 0 times")
+    def test_once_passes(self):
+        self.exp.once()
+        self.exp()
+        self.exp.verify()
 
-    def test_called_passes(self):
-        self.exp.called(2)
+    def test_called_fails(self):
+        self.exp.twice()
+        surely(lambda: self.exp.verify(), raises, VerificationFailure, 
+            "<Expectation 'ParentMock.test'> expected to be called 1 times, but was called 0 times")
+        
+    def test_twice_passes(self):
+        self.exp.twice()
         self.exp()
         self.exp()
         self.exp.verify()
+
+    def test_called_fails(self):
+        self.exp.twice()
+        surely(lambda: self.exp.verify(), raises, VerificationFailure, 
+            "<Expectation 'ParentMock.test'> expected to be called 2 times, but was called 0 times")
+    
+    def test_called_passes(self):
+        self.exp.called(3)
+        self.exp()
+        self.exp()
+        self.exp()
+        self.exp.verify()
+
+    def test_called_fails(self):
+        self.exp.called(3)
+        surely(lambda: self.exp.verify(), raises, VerificationFailure, 
+            "<Expectation 'ParentMock.test'> expected to be called 3 times, but was called 0 times")
     
     def test_returns(self):
         self.exp.returns(1)
@@ -115,6 +137,12 @@ class ExpectationTest(ExpectorantTest):
 
     def test_chaining_called(self):
         assert self.exp == self.exp.called(1)
+    
+    def test_chaining_once(self):
+        assert self.exp == self.exp.once()
+        
+    def test_chaining_twice(self):
+        assert self.exp == self.exp.twice()
 
     def test_chaining_returns(self):
         assert self.exp == self.exp.returns(1)
