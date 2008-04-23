@@ -2,47 +2,39 @@ import sys
 SETUP_METHODS = ('set_up', 'setUp', 'setup')
 TEAR_DOWN_METHODS = ('tear_down', 'tearDown', 'teardown')
 
-class TextClinic:
-    def run_trials(self, a_class):
-        self.results = []
-        for trial_method in self.__trials_for(a_class):
-            try:
-                self.run_trial(a_class(), trial_method)
-            except AssertionError, e:
-                self.results.append((trial_method, 'failure', sys.exc_info()))
-            except:
-                self.results.append((trial_method, 'error', sys.exc_info()))
-            else:
-                self.results.append((trial_method, 'pass', sys.exc_info()))
-    
-    def get_ran(self):
-        return [p[0] for p in self.results]
-    ran = property(get_ran)
-        
-    def get_passes(self):
-        return [p[0] for p in self.results if p[1] == 'pass']
-    passes = property(get_passes)
+class Clinic(object):
+    def __init__(self):
+        self.__listeners = []
 
-    def get_errors(self):
-        return [p[0] for p in self.results if p[1] == 'error']
-    errors = property(get_errors)
+    def add_listener(self, listener):
+        self.__listeners.append(listener)
+
+    def run_trials(self, trial_class):
+        for t in trial_class.__dict__:
+             if self.__is_test_name(t):
+                 self.run_trial(trial_class, t)
     
-    def get_failures(self):
-        return [p[0] for p in self.results if p[1] == 'failure']
-    failures = property(get_failures)
-    
-    def run_trial(self, trial, method_name):
-        self.__run_matching(trial, SETUP_METHODS)
-        self.__run_matching(trial, [method_name])
-        self.__run_matching(trial, TEAR_DOWN_METHODS)
-    
-    def __run_matching(self, trial, matching):
-        for m in trial.__class__.__dict__:
-            if m in matching:
-                getattr(trial, m)()
-    
-    def __trials_for(self, a_class):
-        return [t for t in a_class.__dict__ if self.__is_test_name(t)]
+    def run_trial(self, trial_class, method_name):
+        trial = trial_class()
+        try:
+            self.__notify_listeners('on_start', trial_class, method_name)
+            self.__run_matching(trial, SETUP_METHODS, 'on_setup')
+            self.__run_matching(trial, [method_name])
+            self.__run_matching(trial, TEAR_DOWN_METHODS, 'on_teardown')
+        except:
+            pass
+        finally:
+            self.__notify_listeners('on_completion', trial_class, method_name, sys.exc_info())
+
+    def __run_matching(self, trial, matching, callback=None):
+        matching = [m for m in trial.__class__.__dict__ if m in matching]
+        for m in matching:
+            getattr(trial, m)()
+            if callback: 
+                self.__notify_listeners(callback, trial.__class__, m)
+
+    def __notify_listeners(self, calback, *args): 
+        [getattr(l, calback)(*args) for l in self.__listeners if hasattr(l, calback)]
     
     def __is_test_name(self, funcname):
         return not (funcname.startswith('_') or
