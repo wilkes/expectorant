@@ -1,4 +1,11 @@
 from phlegm import VerificationFailure
+import operator
+
+def confirm(bool, msg):
+    if not bool: raise VerificationFailure, msg
+
+def deny(bool, msg):
+    if bool: raise VerificationFailure, msg
 
 def surely(target, func, *expected):
     if not func(target, *expected):
@@ -21,6 +28,11 @@ same_as.surely_message = lambda a,b: "%s is not the same as %s" % (repr(a), repr
 same_as.surely_not_message = lambda a,b: "%s is the same as %s" % (repr(a), repr(b))
 is_same_as = same_as
 is_the_same_as = same_as
+
+def equals(a,b): return a == b
+equals.surely_message = lambda a,b: "%s does not equal %s" % (repr(a), repr(b))
+equals.surely_not_message = lambda a,b: "%s equals %s" % (repr(a), repr(b))
+
 
 def raises(func, exception_class, message=None):
     try:

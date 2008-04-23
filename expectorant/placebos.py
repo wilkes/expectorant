@@ -1,6 +1,7 @@
 from phlegm import VerificationFailure
+from expectorant.diagnosis import confirm
 
-class Mockery(object):
+class Dispenser(object):
     def __init__(self):
         self.reset()
     
@@ -8,10 +9,10 @@ class Mockery(object):
         self.mocks = {}
     
     def __call__(self, name=None):
-        return Mock(name)
+        return Placebo(name)
     
     def __getattr__(self, name):
-        return self.mocks.setdefault(name, Mock(name))
+        return self.mocks.setdefault(name, Placebo(name))
     
     def __enter__(self):
         return self
@@ -22,10 +23,10 @@ class Mockery(object):
     def verify(self):
         for m in self.mocks.itervalues():
             m.verify()
-mock = Mockery()
+dispenser = Dispenser()
 
 # Stolen from http://www.voidspace.org.uk/python/mock.html, Sentinel pattern
-class Mock(object):
+class Placebo(object):
     def __init__(self, name='Mock'):
         self.name = name
         self.expectations = []
@@ -114,7 +115,3 @@ class Expectation(object):
     
     def __repr__(self):
         return "<%s '%s.%s'>" % (self.__class__.__name__, self.mock.name, self.method_name)
-
-def confirm(bool, msg):
-    if not bool: raise VerificationFailure, msg
-
