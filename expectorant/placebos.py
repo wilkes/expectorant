@@ -26,7 +26,7 @@ class Placebo(object):
     
     def receives(self, method_name):
         exp = Expectation(self, method_name)
-        self.__dict__[method_name] = exp
+        setattr(self, method_name, exp)
         self.expectations.append(exp)
         return exp
     

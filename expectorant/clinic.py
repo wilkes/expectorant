@@ -1,4 +1,3 @@
-from __future__ import with_statement
 import sys
 SETUP_METHODS = ('setUp', 'setup', 'set_up',)
 TEAR_DOWN_METHODS = ('tearDown', 'teardown', 'tear_down',)
@@ -29,11 +28,21 @@ class Clinic(object):
 
     def __run_test(self, trial, method_name, context):
         func = getattr(trial, method_name)
-        if context and func.func_code.co_argcount == 2:
-            with context:
-                func(context)
+        if self.__can_run_with_context(func, context):
+            self.__run_with_context(func, context)
         else:
             func()
+            
+    def __can_run_with_context(self, func, context):
+        return context and func.func_code.co_argcount == 2
+        
+    def __run_with_context(self, func, context):
+        context.__enter__()
+        try:
+            func(context)
+        finally:
+            context.__exit__(sys.exc_info())
+        
             
     def __run_first_matching(self, trial, matching, callback=None):
         for m in matching:
