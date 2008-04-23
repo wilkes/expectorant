@@ -18,6 +18,24 @@ class SampleTrial(object):
     def this_test_fails(self):          assert False
     def this_errors_out(self):          raise Exception, 'boom!'
 
+class TrialContext(object):
+    def __enter__(self):
+        self.entered = True
+        return self
+    
+    def __exit__(self, type, value, tb):
+        self.exited = True
+        
+class TrialWithContext(object):
+    def __init__(self):
+        self.context = TrialContext()
+        
+    def set_up(self):
+        return self.context
+        
+    def test_with_context(self, context):
+        self.context.called = True
+
 class ClinicListener(object):
     def __init__(self):
         self.ran      = []
@@ -66,8 +84,8 @@ class TestClinic(object):
     def test_call_order(self):
         logger = SimpleLogger()
         self.clinic.add_listener(logger)
-        self.clinic.run_trial(SampleTrial, 'this_is_trial1')
-        expected = 'this_is_trial1 setup set_up setUp tearDown teardown tear_down completed '
+        self.clinic.run_trial(SampleTrial(), 'this_is_trial1')
+        expected = 'this_is_trial1 setUp tearDown completed '
         surely(logger.log, equals, expected)
 
     def test_collecting_results(self):
@@ -93,4 +111,9 @@ class TestClinic(object):
         self.clinic.run_trials(SampleTrial)
         surely(self.listener.errors, has_length_of, 1)
         surely('this_errors_out', is_in, self.listener.errors)
+        
+    def test_context(self):
+        trial = TrialWithContext()
+        self.clinic.run_trial(trial, 'test_with_context')
+        surely(trial.context.called, is_true)
     
