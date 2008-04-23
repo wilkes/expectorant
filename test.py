@@ -1,5 +1,13 @@
-from expectorant import mock, Expectation, VerificationFailure
+from __future__ import with_statement
+from expectorant import Mockery, mock, Expectation, VerificationFailure
 import unittest
+
+class MockedExpection:
+    def __init__(self):
+        self.count = 0
+        
+    def verify(self):
+        self.count += 1
 
 class ExpectorantTest(unittest.TestCase):
     def setUp(self):
@@ -8,7 +16,8 @@ class ExpectorantTest(unittest.TestCase):
     
     def before_each(self): pass
 
-class MockFactoryTest(unittest.TestCase):
+
+class MockeryTest(ExpectorantTest):
     def test_verify_all(self):
         mock.FailingMock.receives('doit').called(1)
         try:
@@ -17,23 +26,44 @@ class MockFactoryTest(unittest.TestCase):
         except VerificationFailure, e:
             assert str(e) == "<Expectation 'FailingMock.doit'> expected to be called 1 times, but was called 0 times", str(e)
 
+    def test_with_statement(self):
+        exps = [MockedExpection() for i in range(10)]
+        mock.Mocked.expectations = exps
+        with mock: 
+            for exp in exps: assert exp.count == 0, str(exp.count)
+        for exp in exps: assert exp.count == 1, str(exp.count)
+
+    def test_with_statement_style2(self):
+        exps = [MockedExpection() for i in range(10)]
+        with Mockery() as m: 
+            m.Mocked.expectations = exps
+            for exp in exps: assert exp.count == 0, str(exp.count)
+        for exp in exps: assert exp.count == 1, str(exp.count)
+
+    def test_manual(self):
+        exps = [MockedExpection() for i in range(10)]
+        mock.Mocked.expectations = exps
+        mock.verify()
+        for exp in exps: assert exp.count == 1, str(exp.count)
+
+        
 class MockTest(ExpectorantTest):    
     def before_each(self):
-        self.mock = mock.Mocked
+        self.mocked = mock.Mocked
 
     def test_name(self):
-        assert self.mock.name == 'Mocked'
+        assert self.mocked.name == 'Mocked'
 
     def test_identity(self):
-        assert mock.Mocked is self.mock
+        assert mock.Mocked is self.mocked
     
     def test_verify(self):
-        exps = [getattr(mock, 'mock' + str(i)).receives('verify').called(1).mock for i in range(10)]
-        self.mock.expecations = exps
-        self.mock.verify()
-        for exp in exps:
-            exp.verify()
-
+        exps = [MockedExpection() for i in range(10)]
+        mock.Mocked.expectations = exps
+        mock.Mocked.verify()
+        for exp in exps: assert exp.count == 1, str(exp.count)
+        
+        
 class ExpectationTest(ExpectorantTest):
     def before_each(self):
         self.exp = Expectation(mock.ParentMock, 'test')
@@ -94,5 +124,4 @@ class ExpectationTest(ExpectorantTest):
             self.fail()
         except VerificationFailure, e:
             assert str(e) == "<Expectation 'ParentMock.test'> keyword two: expected: 2 received: 3", str(e)
-        
         

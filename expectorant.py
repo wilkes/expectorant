@@ -17,22 +17,32 @@ class Mock(object):
     def __repr__(self):
         return "<Mock '%s'>" % self.name
 
+    def __str__(self):
+        return repr(self)
+
 class Mockery(object):
     def __init__(self):
         self.reset()
     
+    def reset(self):
+        self.mocks = {}
+
     def __call__(self, name=None):
         return Mock(name)
 
     def __getattr__(self, name):
         return self.mocks.setdefault(name, Mock(name))
     
+    def __enter__(self):
+        return self
+
+    def __exit__( self, type, value, tb ):
+        self.verify()
+    
     def verify(self):
         for m in self.mocks.itervalues():
             m.verify()
 
-    def reset(self):
-        self.mocks = {}
 mock = Mockery()
 
 class Expectation(object):
