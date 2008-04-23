@@ -1,6 +1,7 @@
 from __future__ import with_statement
-from expectorant import Mockery, mock, Expectation, VerificationFailure
+from expectorant import mock, Mockery, Expectation, VerificationFailure, surely, surely_not, same_as, is_same_as, is_the_same_as
 import unittest
+import operator
 
 class MockedExpection:
     def __init__(self):
@@ -134,4 +135,40 @@ class ExpectationTest(ExpectorantTest):
     def test_chaining_returns(self):
         assert self.exp == self.exp.returns(1)
         
-    
+class SurelyTest(unittest.TestCase):
+    def test_surely_operator_is(self):
+        surely(1, same_as, 1)
+        surely(1, is_same_as, 1)
+        surely(1, is_the_same_as, 1)
+            
+    def test_surely_not_operator_is(self):
+        surely_not(2, same_as, 1)
+        
+    def test_same_as_message(self):
+        try:
+            surely(1, same_as, 2)
+        except VerificationFailure, e:
+            assert str(e) == '1 is not the same as 2', str(e)
+
+    def test_same_as_not_message(self):
+        try:
+            surely_not(1, same_as, 1)
+        except VerificationFailure, e:
+            assert str(e) == '1 is the same as 1', str(e)
+
+    def test_unary(self):
+        is_the_truth = lambda x: x is True
+        is_the_truth.surely_message = lambda x: "%s is not True" % x
+        is_the_truth.surely_not_message = lambda x: "%s is True" % x
+
+        surely(True, is_the_truth)
+        try:
+            surely(False, is_the_truth)
+        except VerificationFailure, e:
+            assert str(e) == "False is not True", str(e)
+            
+        surely_not(False, is_the_truth)
+        try:
+            surely_not(True, is_the_truth)
+        except VerificationFailure, e:
+            assert str(e) == "True is True", str(e)

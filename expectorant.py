@@ -1,25 +1,3 @@
-# Stolen from http://www.voidspace.org.uk/python/mock.html, Sentinel pattern
-class Mock(object):
-    def __init__(self, name='Mock'):
-        self.name = name
-        self.expectations = []
-
-    def receives(self, method_name):
-        exp = Expectation(self, method_name)
-        self.__dict__[method_name] = exp
-        self.expectations.append(exp)
-        return exp            
-
-    def verify(self):
-        for each in self.expectations:
-            each.verify()
-            
-    def __repr__(self):
-        return "<Mock '%s'>" % self.name
-
-    def __str__(self):
-        return repr(self)
-
 class Mockery(object):
     def __init__(self):
         self.reset()
@@ -42,8 +20,29 @@ class Mockery(object):
     def verify(self):
         for m in self.mocks.itervalues():
             m.verify()
-
 mock = Mockery()
+
+# Stolen from http://www.voidspace.org.uk/python/mock.html, Sentinel pattern
+class Mock(object):
+    def __init__(self, name='Mock'):
+        self.name = name
+        self.expectations = []
+
+    def receives(self, method_name):
+        exp = Expectation(self, method_name)
+        self.__dict__[method_name] = exp
+        self.expectations.append(exp)
+        return exp            
+
+    def verify(self):
+        for each in self.expectations:
+            each.verify()
+            
+    def __repr__(self):
+        return "<Mock '%s'>" % self.name
+
+    def __str__(self):
+        return repr(self)
 
 class Expectation(object):
     def __init__(self, mock, name):
@@ -106,5 +105,28 @@ class Expectation(object):
 
 def confirm(bool, msg):
     if not bool: raise VerificationFailure, msg
+
+def surely(target, func, *expected):
+    if not func(target, *expected):
+        if hasattr(func, 'surely_message'):
+            msg = func.surely_message(target, *expected)
+        else:
+            msg = "%s failed with %s, %s" % (repr(func), repr(target), repr(expected))
+        raise VerificationFailure, msg
+
+def surely_not(target, func, *expected):
+    if func(target, *expected):
+        if hasattr(func, 'surely_not_message'):
+            msg = func.surely_not_message(target, *expected)
+        else:
+            msg = "%s failed with %s, %s" % (repr(func), repr(target), repr(expected))
+        raise VerificationFailure, msg
+
+def same_as(a,b):
+    return a is b
+same_as.surely_message = lambda a,b: "%s is not the same as %s" % (repr(a), repr(b))
+same_as.surely_not_message = lambda a,b: "%s is the same as %s" % (repr(a), repr(b))
+is_same_as = same_as
+is_the_same_as = same_as
 
 class VerificationFailure(Exception): pass
