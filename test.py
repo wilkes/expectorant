@@ -125,3 +125,13 @@ class ExpectationTest(ExpectorantTest):
         except VerificationFailure, e:
             assert str(e) == "<Expectation 'ParentMock.test'> keyword two: expected: 2 received: 3", str(e)
         
+    def test_chaining_with_with_args(self):
+        assert self.exp == self.exp.with_args([])
+
+    def test_chaining_called(self):
+        assert self.exp == self.exp.called(1)
+
+    def test_chaining_returns(self):
+        assert self.exp == self.exp.returns(1)
+        
+    

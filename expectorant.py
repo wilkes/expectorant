@@ -8,7 +8,7 @@ class Mock(object):
         exp = Expectation(self, method_name)
         self.__dict__[method_name] = exp
         self.expectations.append(exp)
-        return exp
+        return exp            
 
     def verify(self):
         for each in self.expectations:
@@ -54,6 +54,7 @@ class Expectation(object):
         self.args = []
         self.kwargs = None
         self.expects_args = False
+        self.expected_times_called = 0
     
     def __call__(self, *args, **kwargs):
         self.__verify_args(*args, **kwargs)
@@ -64,6 +65,7 @@ class Expectation(object):
         self.expects_args = True
         self.args.extend(args)
         self.kwargs = kwargs
+        return self
     
     def called(self, num):
         self.expected_times_called = num
@@ -74,9 +76,10 @@ class Expectation(object):
         return self
         
     def verify(self):
-        confirm(self.times_called == self.expected_times_called, 
-                "%s expected to be called %s times, but was called %s times" % 
-                    (repr(self), self.expected_times_called, self.times_called))
+        if self.expected_times_called:
+            confirm(self.times_called == self.expected_times_called, 
+                    "%s expected to be called %s times, but was called %s times" % 
+                        (repr(self), self.expected_times_called, self.times_called))
     
     def __verify_args(self, *args, **kwargs):
         if not self.expects_args: return
