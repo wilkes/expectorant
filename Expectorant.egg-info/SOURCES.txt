@@ -1,0 +1,10 @@
+README
+setup.py
+Expectorant.egg-info/PKG-INFO
+Expectorant.egg-info/SOURCES.txt
+Expectorant.egg-info/dependency_links.txt
+Expectorant.egg-info/top_level.txt
+src/expectorant/__init__.py
+src/expectorant/clinic.py
+src/expectorant/diagnosis.py
+src/expectorant/placebos.py
