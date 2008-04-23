@@ -49,10 +49,10 @@ class TestPlacebo(object):
         self.placebo = dispenser.Placebo
     
     def test_name(self):
-        assert self.placebo.name == 'Placebo'
+        surely(self.placebo.name, equals, 'Placebo')
     
     def test_identity(self):
-        assert dispenser.Placebo is self.placebo
+        surely(dispenser.Placebo, same_as, self.placebo)
     
     def test_verify(self):
         exps = [PlaceboExpectation() for i in range(10)]
@@ -132,16 +132,16 @@ class TestExpectation(object):
                 "<Expectation 'Parent.test'> keyword two: expected: 2 received: 3")
 
     def test_chaining_with_with_args(self):
-        assert self.exp == self.exp.with_args([])
+        surely(self.exp, equals, self.exp.with_args([]))
 
     def test_chaining_called(self):
-        assert self.exp == self.exp.called(1)
+        surely(self.exp, equals, self.exp.called(1))
 
     def test_chaining_once(self):
-        assert self.exp == self.exp.once()
+        surely(self.exp, equals, self.exp.once())
 
     def test_chaining_twice(self):
-        assert self.exp == self.exp.twice()
+        surely(self.exp, equals, self.exp.twice())
 
     def test_chaining_returns(self):
-        assert self.exp == self.exp.returns(1)
+        surely(self.exp, equals, self.exp.returns(1))
