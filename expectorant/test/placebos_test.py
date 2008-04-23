@@ -63,6 +63,10 @@ class TestPlacebo(object):
         dispenser.Placebo.verify()
         for exp in exps: 
             surely(exp.count, equals, 1)
+    
+    def test_attr(self):
+        self.placebo.attr('something').returns(1)
+        surely(self.placebo.something, equals, 1)
 
 class TestExpectation(object):
     def setUp(self):

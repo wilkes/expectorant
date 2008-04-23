@@ -23,6 +23,7 @@ class Placebo(object):
     def __init__(self, name='Mock'):
         self.name = name
         self.expectations = []
+        self.gets = {}
     
     def receives(self, method_name):
         exp = Expectation(self, method_name)
@@ -30,6 +31,16 @@ class Placebo(object):
         self.expectations.append(exp)
         return exp
     
+    def attr(self, name):
+        exp = Expectation(self, name)
+        self.gets[name] = exp
+        return exp
+    
+    def __getattr__(self, name):
+        if name in self.gets:
+            return self.gets[name]()  # need to call attributes ourself
+        raise AttributeError, "%r not found in %r" % (name, self)
+        
     def verify(self):
         for each in self.expectations:
             each.verify()
@@ -46,6 +57,7 @@ class Expectation(object):
         self.method_name = name
         self.times_called = 0
         self.return_value = None
+        self.expected_times_called = 0
     
     def __call__(self, *args, **kwargs):
         self.__verify_args(*args, **kwargs)
@@ -70,9 +82,10 @@ class Expectation(object):
     def returns(self, ret):
         self.return_value = ret
         return self
+    and_returns = returns
     
     def verify(self):
-        if hasattr(self, 'expected_times_called') and self.expected_times_called > 0:
+        if self.expected_times_called > 0:
             assert self.times_called == self.expected_times_called, \
                     "%s expected to be called %s times, but was called %s times" % \
                         (repr(self), self.expected_times_called, self.times_called)
