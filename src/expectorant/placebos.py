@@ -90,10 +90,10 @@ class Expectation(object):
         return self
     and_returns = returns
     
-    def and_do(self, func):
+    def does(self, func):
         self.behavior = func
         return self
-    do = and_do
+    and_does = does
     
     def verify(self):
         if self.expected_times_called > 0:
