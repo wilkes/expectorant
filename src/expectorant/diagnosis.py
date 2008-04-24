@@ -16,6 +16,9 @@ def has_length_of(l, length):
 def is_in(item, list):
     assert item in list, "%r not in %r" % (item, list)
 
+def isa(obj, t):
+    assert type(obj) == t, "Expected %s to be of type %s" % (repr(obj), repr(t))
+
 def raises(func, exception_class, message=None):
     try:
         func()

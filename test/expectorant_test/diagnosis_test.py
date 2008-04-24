@@ -1,4 +1,4 @@
-from expectorant.diagnosis import surely, raises, same_as
+from expectorant.diagnosis import surely, raises, same_as, isa
 
 class TestDiagnosis(object):
     def test_surely_operator_is(self):
@@ -18,3 +18,10 @@ class TestDiagnosis(object):
         def is_the_truth(x): assert x is True, "%s is not True" % x
         surely(True, is_the_truth)
         surely(lambda: surely(False, is_the_truth), raises, AssertionError, "False is not True")
+    
+    def test_isa(self):
+        surely(1, isa, type(1))
+
+    def test_isa_fails(self):
+        surely(lambda: surely("a", isa, type(1)), 
+            raises, AssertionError, "Expected %s to be of type %s" % (repr("a"), type(1)))
