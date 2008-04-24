@@ -152,3 +152,18 @@ class TestExpectation(object):
 
     def test_chaining_returns(self):
         surely(self.exp, equals, self.exp.returns(1))
+    
+    def test_and_do(self):
+        should_be_exp = None
+        def done(placebo):
+            placebo.is_done = True
+        self.exp.and_do(done)
+        self.exp()
+        assert self.exp.is_done
+
+    def test_and_do_with_returns(self):
+        should_be_exp = None
+        def done(placebo):
+            return 23
+        self.exp.and_do(done).and_returns(44)
+        surely(self.exp(), equals, 44)

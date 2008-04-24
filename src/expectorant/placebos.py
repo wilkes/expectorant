@@ -56,11 +56,18 @@ class Expectation(object):
         self.method_name = name
         self.times_called = 0
         self.return_value = None
+        self.behavior = None
         self.expected_times_called = 0
     
+    # Always return the return_value if set.
     def __call__(self, *args, **kwargs):
         self.__verify_args(*args, **kwargs)
         self.times_called += 1
+        result = None
+        if self.behavior:
+            result = self.behavior(self, *args, **kwargs)
+            if not self.return_value:
+                return result
         return self.return_value
     
     def with_args(self, *args, **kwargs):
@@ -82,6 +89,11 @@ class Expectation(object):
         self.return_value = ret
         return self
     and_returns = returns
+    
+    def and_do(self, func):
+        self.behavior = func
+        return self
+    do = and_do
     
     def verify(self):
         if self.expected_times_called > 0:
